@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Address Input</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+
+        .ip-form {
+            width: 80%;
+            text-align: center;
+        }
+
+        .ip-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .submit-button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <form class="ip-form" method="post" action="/add">
+        <label for="ipaddr">Enter IP Address:</label><br>
+        <input type="text" id="ipaddr" name="ipaddr" class="ip-input" placeholder="e.g. 1.1.1.1">
+        <br>
+        <button type="submit" class="submit-button">Submit</button>
+        {{ if .status }}
+        <div>
+            <p>
+                IP Address has been {{ .status }}
+            </p>
+        </div>
+        {{ end }}
+    </form>
+
+    <form action="/show">
+        <button type="submit" class="submit-button">Show all monitors</button>
+    </form>
+
+
+</body>
+
+</html>
