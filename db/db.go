@@ -2,7 +2,6 @@ package dbops
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -69,7 +68,6 @@ func GetAllFromDatabase(db *gorm.DB) ([]Check, error) {
 		log.Warn().Msg(results.Error.Error())
 		return nil, results.Error
 	}
-	fmt.Println("Rows Affected: ", results.RowsAffected)
 	return monitors, nil
 }
 

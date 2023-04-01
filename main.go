@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jacewalker/ip-monitor/check"
+	dbops "github.com/jacewalker/ip-monitor/db"
 	"github.com/jacewalker/ip-monitor/routes"
 	"github.com/joho/godotenv"
 )
@@ -14,13 +15,13 @@ func main() {
 	r := gin.Default()
 	r.LoadHTMLGlob("./views/*.html")
 
-	// Run the DailyCheck function once per day
+	db := dbops.Init()
 	dailyTicker := time.NewTicker(20 * time.Second)
 	go func() {
 		for {
 			select {
 			case <-dailyTicker.C:
-				check.DailyCheck()
+				check.DailyPortCheck(db)
 			}
 		}
 	}()

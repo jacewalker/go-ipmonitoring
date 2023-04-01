@@ -11,10 +11,12 @@ import (
 	dbops "github.com/jacewalker/ip-monitor/db"
 	"github.com/jacewalker/ip-monitor/notifications"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 func ParseCheck(c *gin.Context) dbops.Check {
 	check := dbops.Check{}
+	// introduce IP validation and subnet parsing
 	check.Address = c.PostForm("ipaddr")
 
 	return check
@@ -32,13 +34,13 @@ func ScanPorts(ch *dbops.Check) error {
 		nmap.WithContext(ctx),
 	)
 	if err != nil {
-		fmt.Println("Unable to create scanner:", err)
+		log.Info().Msgf("Unable to create scanner:", err)
 		return errors.New("unable to create scanner")
 	}
 
 	results, warnings, err := scanner.Run()
 	if err != nil {
-		fmt.Println("Unable to run scanner:", err)
+		log.Info().Msgf("Unable to run scanner:", err)
 		return errors.New("unable to run scanner")
 	}
 
@@ -57,22 +59,24 @@ func ScanPorts(ch *dbops.Check) error {
 	}
 
 	dbops.PortsToString(ch, openPorts)
-	fmt.Println(ch.OpenPorts)
+	log.Info().Msg(ch.OpenPorts)
 	return nil
 }
 
-func DailyCheck() {
-	fmt.Println("Starting daily check...")
-	db := dbops.Init()
+func DailyPortCheck(db *gorm.DB) {
+	fmt.Printf("\n")
+	log.Info().Msgf("Starting daily check...")
 	monitors, err := dbops.GetAllFromDatabase(db)
 	if err != nil {
-		fmt.Println("Error getting monitors from database:", err)
+		log.Info().Msgf("Error getting monitors from database:", err)
 	}
 
 	for _, monitor := range monitors {
+		fmt.Printf("\n")
+		log.Info().Msgf("Checking %s", monitor.Address)
 		oldOpenPorts, err := dbops.StringToPorts(monitor.OpenPorts)
 		if err != nil {
-			fmt.Println("Error converting open ports string to slice:", err)
+			log.Info().Msgf("Error converting open ports string to slice:", err)
 			continue
 		}
 
@@ -80,7 +84,7 @@ func DailyCheck() {
 
 		err = ScanPorts(&newMonitor)
 		if err != nil {
-			fmt.Println("Error scanning ports:", err)
+			log.Info().Msgf("Error scanning ports:", err)
 			continue
 		}
 
@@ -88,12 +92,15 @@ func DailyCheck() {
 
 		_, totalDiff := dbops.GetOpenPortDifferences(oldOpenPorts, newOpenPorts)
 		if len(totalDiff) != 0 {
+			log.Info().Msg("Ports have changed.")
 			dbops.DeleteFromDatabase(db, monitor)
 			dbops.SaveToDatabase(db, newMonitor)
 			if !notifications.SendEmailNotification(newMonitor) {
 				log.Warn().Msg("Unable to send email notification")
 				continue
 			}
+		} else {
+			log.Info().Msg("Ports have not changed.")
 		}
 
 	}
