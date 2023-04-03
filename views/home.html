@@ -1,71 +1,109 @@
-<!DOCTYPE html>
-<html lang="en">
+{{ template "header.html" }}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Address Input</title>
-    <style>
-        body {
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
-        }
+<body class="bg-slate-800 text-slate-100">
+  <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-lg text-center pt-12">
+      <h1 class="text-2xl font-bold sm:text-3xl">IP Monitoring</h1>
 
-        .ip-form {
-            width: 80%;
-            text-align: center;
-        }
+      <p class="mt-4 text-gray-300">
+        IP Addresses are scanned daily for all open ports.
+      </p>
+    </div>
 
-        .ip-input {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .submit-button {
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 16px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .submit-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-
-<body>
-    <form class="ip-form" method="post" action="/add">
-        <label for="ipaddr">Enter IP Address:</label><br>
-        <input type="text" id="ipaddr" name="ipaddr" class="ip-input" placeholder="e.g. 1.1.1.1">
-        <br>
-        <button type="submit" class="submit-button">Submit</button>
-        {{ if .status }}
-        <div>
-            <p>
-                IP Address has been {{ .status }}
-            </p>
+    <form action="/add" method="post" class="mx-auto mt-8 mb-0 max-w-xl space-y-4">
+      <div>
+        <label for="ipaddr" class="sr-only"></label>
+        <div class="relative">
+          <div class="flex h-12">
+            <input class="w-full rounded-lg border-gray-700 p-4 px-12 mr-2 text-sm shadow-sm text-black"
+              placeholder="Enter IPv4 address" id="ipaddr" name="ipaddr" />
+            <input class="w-full rounded-lg border-gray-700 p-4 px-12 ml-2 text-sm shadow-sm text-black"
+              placeholder="Enter a label" id="label" name="label" />
+          </div>
         </div>
-        {{ end }}
+      </div>
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-gray-100">
+          <a class="underline" href="#" id="toggle-table">View all monitors</a>
+        </p>
+        <button type="submit"
+          class="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-700">
+          Add
+        </button>
+      </div>
     </form>
+  </div>
 
-    <form action="/show">
-        <button type="submit" class="submit-button">Show all monitors</button>
-    </form>
+  <div id="table" class="hidden">
+    <div class="overflow-x-auto px-48 pt-48">
+      <table class="min-w-full divide-y-2 divide-gray-200 text-sm dark:divide-gray-700">
+        <thead>
+          <tr>
+            <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
+              IP Address
+            </th>
+            <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
+              Open Ports
+            </th>
+            <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
+              Label
+            </th>
+            <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
+              Last Scanned
+            </th>
+            <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
+              <a href="/" action="get"
+                class="inline-block rounded bg-green-500 px-4 py-2 text-xs font-medium text-white hover:bg-green-700">
+                Reload
+              </a>
+            </th>
+          </tr>
+        </thead>
 
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          {{ range $check := .checks }}
+          <tr>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              {{ $check.Address }}
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700 dark:text-gray-200">
+              {{ $check.OpenPorts }}
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700 dark:text-gray-200">
+              {{ $check.Label }}
+            </td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700 dark:text-gray-200">
+              {{ $check.CreatedAt.Format "02-Jan-2006 at 3:04PM" }}
+            </td>
+            <td class="whitespace-nowrap px-4 py-2">
+              <a href="/delete/{{ $check.Address }}" action="post"
+                class="inline-block rounded bg-red-500 px-4 py-2 text-xs font-medium text-white hover:bg-red-700">
+                Delete
+              </a>
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Get a reference to the link that toggles the table visibility
+    const toggleTableLink = document.getElementById('toggle-table');
+
+    // Get a reference to the table element
+    const table = document.getElementById('table');
+
+    // Add a click event listener to the link
+    toggleTableLink.addEventListener('click', () => {
+      // Toggle the "hidden" class on the table element
+      table.classList.toggle('hidden');
+
+      // Update the link text to reflect the current state
+      const isTableHidden = table.classList.contains('hidden');
+      toggleTableLink.textContent = isTableHidden ? 'View all monitors' : 'Hide all monitors';
+    });
+  </script>
 
 </body>
-
-</html>
