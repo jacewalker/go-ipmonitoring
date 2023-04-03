@@ -2,6 +2,7 @@ package dbops
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -44,22 +45,23 @@ func SaveToDatabase(db *gorm.DB, ch Check) {
 	db.Create(&Check{
 		Address:   ch.Address,
 		OpenPorts: ch.OpenPorts,
+		Label:     ch.Label,
 	})
 }
 
-func DeleteFromDatabase(db *gorm.DB, ch Check) bool {
-	result := db.Delete(&ch)
-	if result.Error != nil {
-		log.Warn().Msg(result.Error.Error())
-		return false
-	}
-	if result.RowsAffected == 0 {
-		log.Warn().Msgf("No records deleted for check with ID %d", ch.ID)
-		return false
-	}
-	log.Info().Msgf("Deleted %d records for check with ID %d", result.RowsAffected, ch.ID)
-	return true
-}
+// func DeleteFromDatabase(db *gorm.DB, ch Check) bool {
+// 	result := db.Delete(&ch)
+// 	if result.Error != nil {
+// 		log.Warn().Msg(result.Error.Error())
+// 		return false
+// 	}
+// 	if result.RowsAffected == 0 {
+// 		log.Warn().Msgf("No records deleted for check with ID %d", ch.ID)
+// 		return false
+// 	}
+// 	log.Info().Msgf("Deleted %d records for check with ID %d", result.RowsAffected, ch.ID)
+// 	return true
+// }
 
 func GetAllFromDatabase(db *gorm.DB) ([]Check, error) {
 	var monitors []Check
@@ -134,4 +136,30 @@ func GetOpenPortDifferences(oldSlice []int, newSlice []int) (totalOpen []int, di
 	}
 
 	return totalOpenPorts, diffOpenPorts
+}
+
+func LookupCheck(db *gorm.DB, addr string) (*Check, error) {
+	var check Check
+	result := db.Where("address = ?", addr).First(&check)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("no check found with address %s", addr)
+		}
+		return nil, result.Error
+	}
+	return &check, nil
+}
+
+func DeleteCheck(db *gorm.DB, ch *Check) bool {
+	result := db.Delete(&ch)
+	if result.Error != nil {
+		log.Warn().Msg(result.Error.Error())
+		return false
+	}
+	if result.RowsAffected == 0 {
+		log.Warn().Msgf("No records deleted for check with ID %d", ch.ID)
+		return false
+	}
+	log.Info().Msgf("Deleted %d records for check with ID %d", result.RowsAffected, ch.ID)
+	return true
 }

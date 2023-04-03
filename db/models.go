@@ -8,4 +8,5 @@ type Check struct {
 	gorm.Model
 	Address   string
 	OpenPorts string
+	Label     string
 }
