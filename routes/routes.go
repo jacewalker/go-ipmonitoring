@@ -13,9 +13,9 @@ import (
 
 var db = dbops.Init()
 
-func HomeRoute(c *gin.Context) {
-	c.HTML(http.StatusOK, "home.html", nil)
-}
+// func HomeRoute(c *gin.Context) {
+// 	c.HTML(http.StatusOK, "home.html", nil)
+// }
 
 func AddRoute(c *gin.Context) {
 	activeIP := check.ParseCheck(c)
@@ -26,10 +26,11 @@ func AddRoute(c *gin.Context) {
 		dbops.SaveToDatabase(db, activeIP)
 	}()
 
-	c.HTML(http.StatusOK, "home.html", gin.H{
-		"status": "added",
-		"ports":  activeIP.OpenPorts,
-	})
+	// c.HTML(http.StatusOK, "home.html", gin.H{
+	// 	"status": "added",
+	// 	// "ports":  activeIP.OpenPorts,
+	// })
+	MonitorsRoute(c)
 }
 
 func MonitorsRoute(c *gin.Context) {
@@ -43,7 +44,26 @@ func MonitorsRoute(c *gin.Context) {
 	fmt.Println("Printing IPs...")
 	fmt.Println(ips)
 
-	c.HTML(http.StatusOK, "monitors.html", gin.H{
-		"ips": ips,
+	c.HTML(http.StatusOK, "home.html", gin.H{
+		// "ips": ips,
+		"checks": allChecks,
 	})
+}
+
+func DeleteCheckRoute(c *gin.Context) {
+	address := c.Param("ipaddr")
+	fmt.Println("Deleting... ", address)
+
+	ch, err := dbops.LookupCheck(db, address)
+	if err != nil {
+		log.Warn().Msgf("unable to lookup check, error: %s", err)
+		c.Redirect(http.StatusTemporaryRedirect, "/")
+	}
+	if dbops.DeleteCheck(db, ch) {
+		c.Redirect(http.StatusTemporaryRedirect, "/")
+	} else {
+		c.HTML(http.StatusOK, "home.html", gin.H{
+			"error": "Unable to delete check. Try again",
+		})
+	}
 }
