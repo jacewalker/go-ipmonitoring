@@ -18,6 +18,7 @@ func ParseCheck(c *gin.Context) dbops.Check {
 	check := dbops.Check{}
 	// introduce IP validation and subnet parsing
 	check.Address = c.PostForm("ipaddr")
+	check.Label = c.PostForm("label")
 
 	return check
 }
@@ -93,7 +94,8 @@ func DailyPortCheck(db *gorm.DB) {
 		_, totalDiff := dbops.GetOpenPortDifferences(oldOpenPorts, newOpenPorts)
 		if len(totalDiff) != 0 {
 			log.Info().Msg("Ports have changed.")
-			dbops.DeleteFromDatabase(db, monitor)
+			// dbops.DeleteFromDatabase(db, monitor)
+			dbops.DeleteCheck(db, &monitor)
 			dbops.SaveToDatabase(db, newMonitor)
 			if !notifications.SendEmailNotification(newMonitor) {
 				log.Warn().Msg("Unable to send email notification")

@@ -13,10 +13,11 @@ import (
 func main() {
 	godotenv.Load(".env")
 	r := gin.Default()
+	r.Static("/src", "./src")
 	r.LoadHTMLGlob("./views/*.html")
 
 	db := dbops.Init()
-	dailyTicker := time.NewTicker(20 * time.Second)
+	dailyTicker := time.NewTicker(24 * time.Hour)
 	go func() {
 		for {
 			select {
@@ -26,9 +27,9 @@ func main() {
 		}
 	}()
 
-	r.GET("/", routes.HomeRoute)
+	r.GET("/", routes.MonitorsRoute)
 	r.POST("/add", routes.AddRoute)
-	r.GET("/show", routes.MonitorsRoute)
+	r.GET("/delete/:ipaddr", routes.DeleteCheckRoute)
 
 	r.Run(":8080")
 }
