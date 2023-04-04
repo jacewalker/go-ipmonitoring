@@ -9,7 +9,7 @@ import (
 
 func SendEmailNotification(ch dbops.Check) bool {
 
-	to := fmt.Sprintf("Jace <%s>", "jacewalker@me.com")
+	to := fmt.Sprintf(ch.Email)
 	subject := fmt.Sprintf("Open Ports have changed for %s", ch.Address)
 	textbody := fmt.Sprintf("Open Ports have changed for %s", ch.Address)
 	htmlbody := fmt.Sprintf(`

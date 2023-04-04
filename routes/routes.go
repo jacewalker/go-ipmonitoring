@@ -13,26 +13,23 @@ import (
 
 var db = dbops.Init()
 
-// func HomeRoute(c *gin.Context) {
-// 	c.HTML(http.StatusOK, "home.html", nil)
-// }
-
+// Parse the input as either a net.IP or net.CIDR then call the respective function to scan the IP address(es).
 func AddRoute(c *gin.Context) {
-	activeIP := check.ParseCheck(c)
-	go func() {
-		if err := check.ScanPorts(&activeIP); err != nil {
-			log.Error().Msg("unable to scan ports")
-		}
-		dbops.SaveToDatabase(db, activeIP)
-	}()
+	activeCheck := check.ParseCheck(c)
 
-	// c.HTML(http.StatusOK, "home.html", gin.H{
-	// 	"status": "added",
-	// 	// "ports":  activeIP.OpenPorts,
-	// })
+	switch activeCheck.ScanType {
+	case "subnet":
+		go check.ScanSubnet(db, activeCheck)
+	case "ip":
+		go check.ScanIP(db, activeCheck)
+	default:
+		log.Error().Msg("Missing scan type.")
+	}
+
 	MonitorsRoute(c)
 }
 
+// Get all checks from the database then render the home page.
 func MonitorsRoute(c *gin.Context) {
 	allChecks, _ := dbops.GetAllFromDatabase(db)
 	ips := make(map[string]string)
@@ -41,11 +38,7 @@ func MonitorsRoute(c *gin.Context) {
 		ips[check.Address] = check.OpenPorts
 	}
 
-	fmt.Println("Printing IPs...")
-	fmt.Println(ips)
-
 	c.HTML(http.StatusOK, "home.html", gin.H{
-		// "ips": ips,
 		"checks": allChecks,
 	})
 }

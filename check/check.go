@@ -4,23 +4,47 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/Ullaakut/nmap/v2"
 	"github.com/gin-gonic/gin"
 	dbops "github.com/jacewalker/ip-monitor/db"
-	"github.com/jacewalker/ip-monitor/notifications"
 	"github.com/rs/zerolog/log"
-	"gorm.io/gorm"
 )
 
 func ParseCheck(c *gin.Context) dbops.Check {
-	check := dbops.Check{}
-	// introduce IP validation and subnet parsing
-	check.Address = c.PostForm("ipaddr")
-	check.Label = c.PostForm("label")
+	var input string = c.PostForm("ipaddr")
+	var label string = c.PostForm("label")
+	var email string = c.PostForm("email")
 
-	return check
+	var check dbops.Check
+
+	// Parse the input as a Subnet
+	addresses, err := parseSubnet(c, &input)
+	fmt.Println("Addresses: ", addresses)
+	if err != nil {
+		log.Info().Msg("Parse subnet failed. Proceeding as single IP.")
+	} else {
+		check.Addresses = addresses
+		check.Label = label
+		check.ScanType = "subnet"
+		check.Email = email
+		return check
+	}
+
+	// Parse the input as an IP
+	ip := net.ParseIP(input)
+	if ip != nil {
+		check.Address = ip.String()
+		check.Label = label
+		check.ScanType = "ip"
+		check.Email = email
+		return check
+	} else {
+		check.Error = fmt.Sprintln("malformed input")
+		return check
+	}
 }
 
 func ScanPorts(ch *dbops.Check) error {
@@ -31,7 +55,7 @@ func ScanPorts(ch *dbops.Check) error {
 
 	scanner, err := nmap.NewScanner(
 		nmap.WithTargets(ch.Address),
-		nmap.WithMostCommonPorts(50),
+		nmap.WithMostCommonPorts(1000),
 		nmap.WithContext(ctx),
 	)
 	if err != nil {
@@ -49,6 +73,12 @@ func ScanPorts(ch *dbops.Check) error {
 		log.Printf("Warnings: \n %v", warnings)
 	}
 
+	// if host is down, set error
+	// if len(results.Hosts) == 0 {
+	// 	ch.Error = "host down"
+	// 	return errors.New("host down")
+	// }
+
 	for _, host := range results.Hosts {
 		if len(host.Ports) > 0 && host.Status.State == "up" {
 			for _, port := range host.Ports {
@@ -62,48 +92,4 @@ func ScanPorts(ch *dbops.Check) error {
 	dbops.PortsToString(ch, openPorts)
 	log.Info().Msg(ch.OpenPorts)
 	return nil
-}
-
-func DailyPortCheck(db *gorm.DB) {
-	fmt.Printf("\n")
-	log.Info().Msgf("Starting daily check...")
-	monitors, err := dbops.GetAllFromDatabase(db)
-	if err != nil {
-		log.Info().Msgf("Error getting monitors from database:", err)
-	}
-
-	for _, monitor := range monitors {
-		fmt.Printf("\n")
-		log.Info().Msgf("Checking %s", monitor.Address)
-		oldOpenPorts, err := dbops.StringToPorts(monitor.OpenPorts)
-		if err != nil {
-			log.Info().Msgf("Error converting open ports string to slice:", err)
-			continue
-		}
-
-		newMonitor := monitor
-
-		err = ScanPorts(&newMonitor)
-		if err != nil {
-			log.Info().Msgf("Error scanning ports:", err)
-			continue
-		}
-
-		newOpenPorts, _ := dbops.StringToPorts(newMonitor.OpenPorts)
-
-		_, totalDiff := dbops.GetOpenPortDifferences(oldOpenPorts, newOpenPorts)
-		if len(totalDiff) != 0 {
-			log.Info().Msg("Ports have changed.")
-			// dbops.DeleteFromDatabase(db, monitor)
-			dbops.DeleteCheck(db, &monitor)
-			dbops.SaveToDatabase(db, newMonitor)
-			if !notifications.SendEmailNotification(newMonitor) {
-				log.Warn().Msg("Unable to send email notification")
-				continue
-			}
-		} else {
-			log.Info().Msg("Ports have not changed.")
-		}
-
-	}
 }

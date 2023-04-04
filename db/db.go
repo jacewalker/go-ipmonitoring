@@ -39,29 +39,28 @@ func Init() *gorm.DB {
 	return db
 }
 
-func SaveToDatabase(db *gorm.DB, ch Check) {
+func SaveToDatabase(db *gorm.DB, ch *Check) {
 	log.Info().Msg("Saving message transaction to the database.")
+
+	var portsSave string
+
+	if len(ch.OpenPorts) == 0 {
+		portsSave = "None"
+	} else {
+		portsSave = ch.OpenPorts
+	}
+
+	// if ch.Error != "" {
+
+	// }
 
 	db.Create(&Check{
 		Address:   ch.Address,
-		OpenPorts: ch.OpenPorts,
+		OpenPorts: portsSave,
 		Label:     ch.Label,
+		Email:     ch.Email,
 	})
 }
-
-// func DeleteFromDatabase(db *gorm.DB, ch Check) bool {
-// 	result := db.Delete(&ch)
-// 	if result.Error != nil {
-// 		log.Warn().Msg(result.Error.Error())
-// 		return false
-// 	}
-// 	if result.RowsAffected == 0 {
-// 		log.Warn().Msgf("No records deleted for check with ID %d", ch.ID)
-// 		return false
-// 	}
-// 	log.Info().Msgf("Deleted %d records for check with ID %d", result.RowsAffected, ch.ID)
-// 	return true
-// }
 
 func GetAllFromDatabase(db *gorm.DB) ([]Check, error) {
 	var monitors []Check
