@@ -1,0 +1,40 @@
+{{ define "monitoring-mode" }}
+<div id="scantechnology">
+    <h3 class="mb-5 text-lg font-medium text-gray-900 dark:text-white text-center mt-6">Choose monitoring mode:</h3>
+    <ul class="grid w-full gap-6 md:grid-cols-3">
+      <li>
+        <input type="checkbox" id="uptime-option" name="uptime-option" value="checked" class="hidden peer" required="">
+        <label for="uptime-option"
+          class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border-2 border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 peer-checked:border-blue-600 hover:text-gray-600 dark:peer-checked:text-gray-300 peer-checked:text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
+          <div class="block">
+            <i class="fa-solid fa-magnifying-glass fa-xl pt-2 pb-6" style="color: #ffffff;"></i>
+            <div class="w-full text-lg font-semibold">Uptime</div>
+            <div class="w-full text-sm">Monitoring if the endpoint is online via ICMP every 60 seconds.</div>
+          </div>
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="openport-option" name="openport-option" value="checked" class="hidden peer">
+        <label for="openport-option"
+          class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border-2 border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 peer-checked:border-blue-600 hover:text-gray-600 dark:peer-checked:text-gray-300 peer-checked:text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
+          <div class="block">
+            <i class="fa-solid fa-lock fa-xl pt-2 pb-6" style="color: #ffffff;"></i>
+            <div class="w-full text-lg font-semibold">Open Ports</div>
+            <div class="w-full text-sm">Monitoring the endpoint's open ports using NMAP's top 1000 ports.</div>
+          </div>
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="vulnerability-option" name="vulnerability-option" value="checked" class="hidden peer">
+        <label for="vulnerability-option"
+          class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border-2 border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 peer-checked:border-blue-600 hover:text-gray-600 dark:peer-checked:text-gray-300 peer-checked:text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
+          <div class="block">
+            <i class="fa-solid fa-shield fa-xl pt-2 pb-6" style="color: #ffffff;"></i>
+            <div class="w-full text-lg font-semibold">Vulnerability</div>
+            <div class="w-full text-sm">Monitoring the endpoint daily for known vulnerabilities.</div>
+          </div>
+        </label>
+      </li>
+    </ul>
+  </div>
+{{ end }}

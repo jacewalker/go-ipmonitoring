@@ -50,16 +50,13 @@ func SaveToDatabase(db *gorm.DB, ch *Check) {
 		portsSave = ch.OpenPorts
 	}
 
-	// if ch.Error != "" {
-
-	// }
-
 	db.Create(&Check{
 		Address:   ch.Address,
 		OpenPorts: portsSave,
 		Label:     ch.Label,
 		Email:     ch.Email,
 	})
+
 }
 
 func GetAllFromDatabase(db *gorm.DB) ([]Check, error) {

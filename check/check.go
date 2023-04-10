@@ -14,11 +14,25 @@ import (
 )
 
 func ParseCheck(c *gin.Context) dbops.Check {
+	var check dbops.Check
 	var input string = c.PostForm("ipaddr")
 	var label string = c.PostForm("label")
 	var email string = c.PostForm("email")
 
-	var check dbops.Check
+	// if c.Request.FormValue("uptime-option") == "checked" {
+	// 	check.Monitoring = dbops.MonitoringType{
+	// 		Uptime: true,
+	// 	}
+	// } else if c.Request.FormValue("openport-option") == "checked" {
+	// 	check.Monitoring = dbops.MonitoringType{
+	// 		OpenPort: true,
+	// 	}
+	// } else if c.Request.FormValue("vulnerability-option") == "checked" {
+	// 	check.Monitoring = dbops.MonitoringType{
+	// 		Vulnerability: true,
+	// 	}
+	// }
+	// fmt.Println("Monitors selected: ", check.Monitoring)
 
 	// Parse the input as a Subnet
 	addresses, err := parseSubnet(c, &input)

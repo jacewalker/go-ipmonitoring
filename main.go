@@ -31,5 +31,5 @@ func main() {
 	r.POST("/add", routes.AddRoute)
 	r.GET("/delete/:ipaddr", routes.DeleteCheckRoute)
 
-	r.Run(":8080")
+	r.Run(":80")
 }
