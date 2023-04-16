@@ -16,34 +16,19 @@ import (
 func ParseCheck(c *gin.Context) dbops.Check {
 	var check dbops.Check
 	var input string = c.PostForm("ipaddr")
-	var label string = c.PostForm("label")
-	var email string = c.PostForm("email")
 
-	// if c.Request.FormValue("uptime-option") == "checked" {
-	// 	check.Monitoring = dbops.MonitoringType{
-	// 		Uptime: true,
-	// 	}
-	// } else if c.Request.FormValue("openport-option") == "checked" {
-	// 	check.Monitoring = dbops.MonitoringType{
-	// 		OpenPort: true,
-	// 	}
-	// } else if c.Request.FormValue("vulnerability-option") == "checked" {
-	// 	check.Monitoring = dbops.MonitoringType{
-	// 		Vulnerability: true,
-	// 	}
-	// }
-	// fmt.Println("Monitors selected: ", check.Monitoring)
+	check.Label = c.PostForm("label")
+	check.Email = c.PostForm("email")
 
 	// Parse the input as a Subnet
 	addresses, err := parseSubnet(c, &input)
 	fmt.Println("Addresses: ", addresses)
 	if err != nil {
-		log.Info().Msg("Parse subnet failed. Proceeding as single IP.")
+		log.Info().Msg("Parse subnet failed. Checking for IPv4.")
 	} else {
 		check.Addresses = addresses
-		check.Label = label
 		check.ScanType = "subnet"
-		check.Email = email
+		dbops.SaveToDatabase(db, &check)
 		return check
 	}
 
@@ -51,14 +36,27 @@ func ParseCheck(c *gin.Context) dbops.Check {
 	ip := net.ParseIP(input)
 	if ip != nil {
 		check.Address = ip.String()
-		check.Label = label
 		check.ScanType = "ip"
-		check.Email = email
+		dbops.SaveToDatabase(db, &check)
 		return check
 	} else {
-		check.Error = fmt.Sprintln("malformed input")
+		log.Info().Msg("IPv4 check failed. Checking FQDN.")
+	}
+
+	// Parse the input as a FQDN
+	ips, err := net.LookupIP(input)
+	if err != nil {
+		log.Warn().Msg("malformed input")
+	} else if len(ips) > 0 {
+		check.Address = ips[0].To4().String()
+		check.Hostname = input
+		check.ScanType = "fqdn"
+		dbops.SaveToDatabase(db, &check)
 		return check
 	}
+
+	dbops.SaveToDatabase(db, &check)
+	return check
 }
 
 func ScanPorts(ch *dbops.Check) error {
@@ -87,12 +85,6 @@ func ScanPorts(ch *dbops.Check) error {
 		log.Printf("Warnings: \n %v", warnings)
 	}
 
-	// if host is down, set error
-	// if len(results.Hosts) == 0 {
-	// 	ch.Error = "host down"
-	// 	return errors.New("host down")
-	// }
-
 	for _, host := range results.Hosts {
 		if len(host.Ports) > 0 && host.Status.State == "up" {
 			for _, port := range host.Ports {
@@ -104,6 +96,7 @@ func ScanPorts(ch *dbops.Check) error {
 	}
 
 	dbops.PortsToString(ch, openPorts)
+	ch.PortScanCompleted = true
 	log.Info().Msg(ch.OpenPorts)
 	return nil
 }

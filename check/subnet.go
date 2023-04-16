@@ -34,6 +34,7 @@ func ScanSubnet(db *gorm.DB, activeCheck dbops.Check) {
 			if err := ScanPorts(&newactiveCheck); err != nil {
 				log.Error().Msg("unable to scan ports or host is down")
 			} else {
+				newactiveCheck.PortScanCompleted = true
 				dbops.SaveToDatabase(db, &newactiveCheck)
 			}
 			wg.Done()

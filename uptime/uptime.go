@@ -36,12 +36,13 @@ func SendICMPRequest(ch *dbops.Check) {
 	if ch.Online == status {
 		fmt.Println("No changes, not updating the database.")
 	} else {
-		fmt.Println("Status: ", status)
-		fmt.Println("Online: ", ch.Online)
-		fmt.Println("\nUpdating the database!\n")
+		fmt.Println("Current ICMP status: ", status)
+		fmt.Println("Previous ICMP Response: ", ch.Online)
+		fmt.Println("Updating the database.")
 		ch.Online = status
-		dbops.DeleteCheck(db, ch)
-		dbops.SaveToDatabase(db, ch)
+		if dbops.DeleteCheck(db, ch) {
+			dbops.SaveToDatabase(db, ch)
+		}
 	}
 
 }

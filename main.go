@@ -7,11 +7,17 @@ import (
 	"github.com/jacewalker/ip-monitor/check"
 	dbops "github.com/jacewalker/ip-monitor/db"
 	"github.com/jacewalker/ip-monitor/routes"
+	"github.com/rs/zerolog/log"
+
 	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	godotenv.Load(".env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Warn().Msg("Unable to load .env file")
+	}
 	r := gin.Default()
 	r.Static("/src", "./src")
 	r.LoadHTMLGlob("./views/*.html")
@@ -23,6 +29,16 @@ func main() {
 			select {
 			case <-dailyTicker.C:
 				check.DailyPortCheck(db)
+			}
+		}
+	}()
+
+	uptimeTicker := time.NewTicker(60 * time.Second)
+	go func() {
+		for {
+			select {
+			case <-uptimeTicker.C:
+				check.UptimeCheck(db)
 			}
 		}
 	}()

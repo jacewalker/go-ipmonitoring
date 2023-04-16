@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jacewalker/ip-monitor/check"
 	dbops "github.com/jacewalker/ip-monitor/db"
+	"github.com/jacewalker/ip-monitor/uptime"
 )
 
 var db = dbops.Init()
@@ -21,6 +22,10 @@ func AddRoute(c *gin.Context) {
 	case "subnet":
 		go check.ScanSubnet(db, activeCheck)
 	case "ip":
+		uptime.SendICMPRequest(&activeCheck)
+		go check.ScanIP(db, activeCheck)
+	case "fqdn":
+		uptime.SendICMPRequest(&activeCheck)
 		go check.ScanIP(db, activeCheck)
 	default:
 		log.Error().Msg("Missing scan type.")
@@ -32,11 +37,6 @@ func AddRoute(c *gin.Context) {
 // Get all checks from the database then render the home page.
 func MonitorsRoute(c *gin.Context) {
 	allChecks, _ := dbops.GetAllFromDatabase(db)
-	ips := make(map[string]string)
-
-	for _, check := range allChecks {
-		ips[check.Address] = check.OpenPorts
-	}
 
 	c.HTML(http.StatusOK, "home.html", gin.H{
 		"checks": allChecks,

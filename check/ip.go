@@ -9,12 +9,12 @@ import (
 )
 
 func ScanIP(db *gorm.DB, activeCheck dbops.Check) {
-	fmt.Println("IP has been provided!!!")
-	go func() {
-		if err := ScanPorts(&activeCheck); err != nil {
-			log.Error().Msg("unable to scan ports or host is down")
-		} else {
-			dbops.SaveToDatabase(db, &activeCheck)
-		}
-	}()
+	fmt.Println("Scanning IPv4:", activeCheck.Address)
+	if err := ScanPorts(&activeCheck); err != nil {
+		log.Error().Msg("unable to scan ports or host is down")
+	} else {
+		dbops.DeleteCheck(db, &activeCheck)
+		activeCheck.PortScanCompleted = true
+		dbops.SaveToDatabase(db, &activeCheck)
+	}
 }

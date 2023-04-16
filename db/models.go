@@ -4,20 +4,16 @@ import (
 	"gorm.io/gorm"
 )
 
-// type MonitoringType struct {
-// 	Uptime        bool
-// 	OpenPort      bool
-// 	Vulnerability bool
-// }
-
 type Check struct {
 	gorm.Model
-	Address   string
-	Addresses string
-	OpenPorts string
-	Label     string
-	ScanType  string
-	// Monitoring MonitoringType
-	Error string
-	Email string
+	Address           string
+	Addresses         string
+	Hostname          string
+	OpenPorts         string
+	PortScanCompleted bool
+	Label             string
+	ScanType          string
+	Online            bool
+	Error             string
+	Email             string
 }

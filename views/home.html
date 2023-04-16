@@ -16,13 +16,13 @@
         <div class="relative">
           <div class="flex h-12">
             <input class="w-full rounded-lg border-gray-700 p-4 px-12 mr-2 text-sm shadow-sm text-black"
-              placeholder="Enter IPv4 address" id="ipaddr" name="ipaddr" />
+              placeholder="Enter IPv4 or FQDN" id="ipaddr" name="ipaddr" spellcheck="false" />
             <input class="w-full rounded-lg border-gray-700 p-4 px-12 ml-2 text-sm shadow-sm text-black"
               placeholder="Enter a label" id="label" name="label" />
           </div>
           <div class="flex h-12 mt-4 px-24">
             <input class="w-full rounded-lg border-gray-700 p-4 px-12 ml-2 text-sm shadow-sm text-black"
-              placeholder="Email address" id="email" name="email" />
+              placeholder="Email address" id="email" name="email" spellcheck="false" />
           </div>
 
           <!-- {{ template "monitoring-mode" .}} -->
@@ -48,14 +48,16 @@
         <thead>
           <tr>
             <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
-              IP Address <i class="fa-solid fa-sort" style="color: #ffffff;"></i>
+              Target <i class="fa-solid fa-sort" style="color: #ffffff;"></i>
             </th>
             <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
               Open Ports <i class="fa-solid fa-sort" style="color: #ffffff;"></i>
             </th>
-
             <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
               Label <i class="fa-solid fa-sort" style="color: #ffffff;"></i>
+            </th>
+            <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
+              Online <i class="fa-solid fa-sort" style="color: #ffffff;"></i>
             </th>
             <th class="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900 dark:text-white">
               Last Scanned <i class="fa-solid fa-sort" style="color: #ffffff;"></i>
@@ -76,13 +78,44 @@
           {{ range $check := .checks }}
           <tr>
             <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white">
+              {{ if $check.Hostname }}
+              {{ $check.Hostname }}
+              {{ else }}
               {{ $check.Address }}
+              {{ end }}
             </td>
             <td class="whitespace-nowrap px-4 py-2 text-gray-700 dark:text-gray-200">
+              {{ if $check.PortScanCompleted }}
               {{ $check.OpenPorts }}
+              {{ else }}
+              <div style="position: relative;">
+                {{ $check.OpenPorts }}
+                <button data-tooltip-target="tooltip-default" type="button">
+                  <i class="fa-solid fa-circle-info fa-fade fa-xs"
+                    style="position: absolute; top: 50%; right: -10px; transform: translateY(-50%); color: #ffffff;"></i>
+                </button>
+                <div id="tooltip-default" role="tooltip"
+                  class="absolute invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
+                  Scanning may take a few minutes to complete.
+                  <div class="tooltip-arrow" data-popper-arrow></div>
+                </div>
+              </div>
+              {{ end }}
             </td>
             <td class="whitespace-nowrap px-4 py-2 text-gray-700 dark:text-gray-200">
               {{ $check.Label }}
+            </td>
+
+            {{ if $check.Online }}
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700 dark:text-gray-200">
+              <i class="fa-solid fa-up-long" style="color: #00f900;"></i>
+            </td>
+            {{ else }}
+            <td class="whitespace-nowrap px-4 py-2 text-red-700 dark:text-gray-200">
+              <i class="fa-solid fa-up-long fa-flip-vertical" style="color: #ff2600;"></i>
+            </td>
+            {{ end }}
+
             </td>
             <td class="whitespace-nowrap px-4 py-2 text-gray-700 dark:text-gray-200">
               {{ $check.CreatedAt.Format "02-Jan-2006 at 3:04PM" }}
@@ -137,7 +170,7 @@
           // Refresh the table after 5 seconds
           setTimeout(() => {
             location.reload();
-          }, 5000);
+          }, 1000);
         })
         .catch((error) => {
           console.error('Error:', error);
@@ -204,8 +237,9 @@
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
       });
     });
-
   </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
 
 
 </body>
