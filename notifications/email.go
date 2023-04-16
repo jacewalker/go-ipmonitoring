@@ -10,8 +10,8 @@ import (
 func SendPortEmailNotification(ch dbops.Check) bool {
 
 	to := fmt.Sprintf(ch.Email)
-	subject := fmt.Sprintf("Open Ports have changed for %s", ch.Address)
-	textbody := fmt.Sprintf("Open Ports have changed for %s", ch.Address)
+	subject := fmt.Sprintf("Open Ports have changed for %s", ch.Label)
+	textbody := fmt.Sprintf("Open Ports have changed for %s", ch.Label)
 	htmlbody := fmt.Sprintf(`
         <!DOCTYPE html>
         <html>
@@ -21,14 +21,14 @@ func SendPortEmailNotification(ch dbops.Check) bool {
                 </head>
                 <body style="font-family: sans-serif;">
                         <h1>Open Ports have changed for %s</h1>
-                        <p>Below are the new open ports:</p>
+                        <p>Below are the new open ports on %s:</p>
                         <p>%s</p>
                         <p>Kind regards,</p>
                         <p>Jace's IP Monitoring</p>
                 </body>
         </html>
 
-`, ch.Address, ch.Address, ch.OpenPorts)
+`, ch.Label, ch.Label, ch.Address, ch.OpenPorts)
 
 	email := smtp2go.Email{
 		From: "IP Monitoring <ipmon@jcwlkr.io>",
@@ -64,8 +64,8 @@ func SendUptimeEmailNotification(ch dbops.Check) bool {
 	}
 
 	to := fmt.Sprintf(ch.Email)
-	subject := fmt.Sprintf("Uptime Alert for %s", ch.Address)
-	textbody := fmt.Sprintf("Uptime Alert for %s", ch.Address)
+	subject := fmt.Sprintf("Uptime Alert for %s", ch.Label)
+	textbody := fmt.Sprintf("Uptime Alert for %s", ch.Label)
 	htmlbody := fmt.Sprintf(`
         <!DOCTYPE html>
         <html>
@@ -81,7 +81,7 @@ func SendUptimeEmailNotification(ch dbops.Check) bool {
                 </body>
         </html>
 
-`, ch.Address, status, ch.Address, ch.Address, status)
+`, ch.Label, status, ch.Label, ch.Address, status)
 
 	email := smtp2go.Email{
 		From: "IP Monitoring <monitor@jcwlkr.io>",
