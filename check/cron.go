@@ -67,16 +67,21 @@ func UptimeCheck(db *gorm.DB) {
 		log.Info().Msgf("Checking %s", monitor.Address)
 		if monitor.Online {
 			uptime.SendICMPRequest(&monitor)
+			// If the monitor was online and is now offline
 			if !monitor.Online {
-				notifications.SendUptimeEmailNotification(monitor)
+				monitor.OfflineCount += 1
+				// Only notify if 4 consistent failures.
+				if monitor.OfflineCount == 4 {
+					notifications.SendUptimeEmailNotification(monitor)
+				}
 			}
 		} else if !monitor.Online {
 			uptime.SendICMPRequest(&monitor)
 			if monitor.Online {
+				monitor.OfflineCount = 0
 				notifications.SendUptimeEmailNotification(monitor)
 			}
 		}
-
 	}
 }
 
