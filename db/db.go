@@ -126,6 +126,7 @@ func SaveToDatabase(db *gorm.DB, ch *Check) {
 		Online:            ch.Online,
 		Hostname:          hostnameSave,
 		PortScanCompleted: ch.PortScanCompleted,
+		OfflineCount:      ch.OfflineCount,
 	})
 }
 

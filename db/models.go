@@ -14,6 +14,9 @@ type Check struct {
 	Label             string
 	ScanType          string
 	Online            bool
+	OfflineCount      int
 	Error             string
-	Email             string
+	// NotificationMethod string
+	Email string
+	// Pushover           string
 }

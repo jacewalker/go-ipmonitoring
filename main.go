@@ -33,7 +33,7 @@ func main() {
 		}
 	}()
 
-	uptimeTicker := time.NewTicker(60 * time.Second)
+	uptimeTicker := time.NewTicker(30 * time.Second)
 	go func() {
 		for {
 			select {

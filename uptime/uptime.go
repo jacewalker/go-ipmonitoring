@@ -18,6 +18,7 @@ func SendICMPRequest(ch *dbops.Check) {
 	if err != nil {
 		log.Warn().Msg(err.Error())
 	}
+
 	pinger.SetPrivileged(true)
 	pinger.Count = 2
 	pinger.Timeout = 3 * time.Second
